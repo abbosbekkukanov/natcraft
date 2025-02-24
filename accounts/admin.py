@@ -1,29 +1,45 @@
 from django.contrib import admin
-from .models import CustomUser, UserProfile, EmailConfirmation, PasswordResetCode
-from django.contrib.auth.admin import UserAdmin
+from .models import CustomUser, UserProfile, Profession, EmailConfirmation, PasswordResetCode
 
-class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-    list_display = ('email', 'is_active', 'is_staff')
-    search_fields = ('email',)
-    ordering = ('email',)
-    fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'is_staff', 'is_active')}
-        ),
-    )
-
-@admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'phone_number')
-    search_fields = ('user__email',)
+# Custom User Admin
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ('email', 'first_name', 'last_name', 'is_active', 'is_staff', 'date_joined')
+    search_fields = ('email', 'first_name', 'last_name')
+    list_filter = ('is_active', 'is_staff', 'date_joined')
+    ordering = ('-date_joined',)
 
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(EmailConfirmation)
-admin.site.register(PasswordResetCode)
+
+# Profession Admin
+class ProfessionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_at', 'updated_at')
+    search_fields = ('name',)
+    ordering = ('name',)
+
+admin.site.register(Profession, ProfessionAdmin)
+
+# UserProfile Admin
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'profession', 'bio', 'phone_number', 'experience', 'mentees', 'award', 'created_at', 'updated_at')
+    search_fields = ('user__email', 'bio', 'phone_number')
+    list_filter = ('profession', 'experience', 'mentees')
+    ordering = ('-created_at',)
+
+admin.site.register(UserProfile, UserProfileAdmin)
+
+# EmailConfirmation Admin
+class EmailConfirmationAdmin(admin.ModelAdmin):
+    list_display = ('email', 'confirmation_code', 'created_at', 'is_confirmed')
+    search_fields = ('email',)
+    list_filter = ('is_confirmed',)
+    ordering = ('-created_at',)
+
+admin.site.register(EmailConfirmation, EmailConfirmationAdmin)
+
+# PasswordResetCode Admin
+class PasswordResetCodeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'code', 'created_at')
+    search_fields = ('user__email', 'code')
+    ordering = ('-created_at',)
+
+admin.site.register(PasswordResetCode, PasswordResetCodeAdmin)
