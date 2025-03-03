@@ -18,12 +18,11 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     threed_model = models.FileField(upload_to='3d_models/', null=True, blank=True)
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Discount in percent")
     address = models.CharField(max_length=255)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    view_count = models.PositiveIntegerField(default=0) 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    view_count = models.PositiveIntegerField(default=0) 
 
     def upload_to(instance, filename):
         return 'product_images/{filename}'.format(filename=filename)

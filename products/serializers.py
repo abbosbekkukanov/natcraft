@@ -4,14 +4,15 @@ from .models import Product, Category, ProductImage, CartItem, Favorite, Comment
 
 class CategorySerializer(serializers.ModelSerializer):
     # products = ProductSerializer(many=True, read_only=True)
+    product_count = serializers.IntegerField(source='products.count', read_only=True)
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description']
+        fields = "__all__"
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'image']
+        fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
@@ -22,7 +23,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'product_images', 'threed_model', 'address', 'latitude', 'longitude', 'images', 'view_count', 'created_at', 'updated_at']
+        fields = "__all__"
+        read_only_fields = ['created_at', 'updated_at']
 
     def create(self, validated_data):
         images_data = self.context.get('request').FILES
@@ -35,7 +37,8 @@ class ProductSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
-        fields = ['id', 'user', 'product', 'created_at']
+        fields = "__all__"
+        
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:

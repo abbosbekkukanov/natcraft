@@ -15,6 +15,7 @@ from .serializers import (
     UserProfileSerializer,
     ProfessionSerializer
 )
+from .permissions import IsAuthorOrReadOnly
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -103,10 +104,13 @@ class ProfessionListView(generics.ListAPIView):
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthorOrReadOnly]
 
     def get_queryset(self):
-        return UserProfile.objects.filter(user=self.request.user)
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
+            return UserProfile.objects.filter(user=self.request.user)
+        return UserProfile.objects.all()
+
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
