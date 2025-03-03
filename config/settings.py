@@ -9,7 +9,7 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['qqrnatcraft.uz', 'www.qqrnatcraft.uz', '127.0.0.1', '176.221.29.142']
 
 # Application definition 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
