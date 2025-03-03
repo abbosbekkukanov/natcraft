@@ -4,7 +4,7 @@ from .models import Product, Category, ProductImage, CartItem, Favorite, Comment
 
 class CategorySerializer(serializers.ModelSerializer):
     # products = ProductSerializer(many=True, read_only=True)
-    product_count = serializers.IntegerField(source='products.count', read_only=True)
+    product_count = serializers.IntegerField(source='products.count', read_only=True)git
     class Meta:
         model = Category
         fields = "__all__"
