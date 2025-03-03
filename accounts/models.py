@@ -87,6 +87,11 @@ class EmailConfirmation(models.Model):
 
     def __str__(self):
         return self.email
+    
+@receiver(post_save, sender=CustomUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
 
 from django.utils.timezone import now
 from django.contrib.auth import get_user_model
