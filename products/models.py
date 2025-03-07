@@ -13,6 +13,7 @@ class Category(models.Model):
         return self.name
 
 class Product(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -48,7 +49,7 @@ class Favorite(models.Model):
         unique_together = ('user', 'product')  # Har bir foydalanuvchi mahsulotni faqat bir marta yoqdirishi mumkin
 
     def __str__(self):
-        return f"{self.user.username} likes {self.product.name}"
+        return f"{self.user.email} likes {self.product.name}"
     
 
 class CartItem(models.Model):
@@ -61,7 +62,7 @@ class CartItem(models.Model):
         unique_together = ('user', 'product')  # Har bir mahsulot foydalanuvchi savatchasida faqat bir marta bo'lishi kerak
 
     def __str__(self):
-        return f"{self.quantity} of {self.product.name} in {self.user.username}'s cart"
+        return f"{self.quantity} of {self.product.name} in {self.user.email}'s cart"
 
 
 
@@ -76,7 +77,7 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.product.name}"
+        return f"Comment by {self.user.email} on {self.product.name}"
 
 
 # 19.11.2024
@@ -90,4 +91,4 @@ class ViewedProduct(models.Model):
         ordering = ['-viewed_at']  # Eng oxirgi ko‘rilgan mahsulotlarni tartibda ko'rsatadi
 
     def __str__(self):
-        return f"{self.user.username} viewed {self.product.name}"
+        return f"{self.user.email} viewed {self.product.name}"
