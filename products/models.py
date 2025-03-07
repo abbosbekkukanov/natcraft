@@ -13,12 +13,17 @@ class Category(models.Model):
         return self.name
 
 class Product(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     threed_model = models.FileField(upload_to='3d_models/', null=True, blank=True)
+<<<<<<< HEAD
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount in percent")
+=======
+    discount = models.DecimalField(max_digits=5, decimal_places=2,  null=True, blank=True, help_text="Discount in percent")
+>>>>>>> 1bb4bd178f0b49abf46df6a055ac7479006b0bd6
     address = models.CharField(max_length=255)
     view_count = models.PositiveIntegerField(default=0) 
     created_at = models.DateTimeField(default=timezone.now)
@@ -48,7 +53,7 @@ class Favorite(models.Model):
         unique_together = ('user', 'product')  # Har bir foydalanuvchi mahsulotni faqat bir marta yoqdirishi mumkin
 
     def __str__(self):
-        return f"{self.user.username} likes {self.product.name}"
+        return f"{self.user.email} likes {self.product.name}"
     
 
 class CartItem(models.Model):
@@ -61,7 +66,7 @@ class CartItem(models.Model):
         unique_together = ('user', 'product')  # Har bir mahsulot foydalanuvchi savatchasida faqat bir marta bo'lishi kerak
 
     def __str__(self):
-        return f"{self.quantity} of {self.product.name} in {self.user.username}'s cart"
+        return f"{self.quantity} of {self.product.name} in {self.user.email}'s cart"
 
 
 
@@ -76,7 +81,7 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.product.name}"
+        return f"Comment by {self.user.email} on {self.product.name}"
 
 
 # 19.11.2024
@@ -90,4 +95,8 @@ class ViewedProduct(models.Model):
         ordering = ['-viewed_at']  # Eng oxirgi ko‘rilgan mahsulotlarni tartibda ko'rsatadi
 
     def __str__(self):
+<<<<<<< HEAD
         return f"{self.user.username} viewed {self.product.name}"
+=======
+        return f"{self.user.email} viewed {self.product.name}"
+>>>>>>> 1bb4bd178f0b49abf46df6a055ac7479006b0bd6

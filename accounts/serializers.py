@@ -195,13 +195,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = [
-            'id', 'user_email', 'user_first_name', 'profession', 'bio', 
-            'profile_image', 'address', 'latitude', 'longitude', 
-            'phone_number', 'experience', 'mentees', 'award', 
-            'created_at', 'updated_at'
-        ]
+        fields = "__all__"
         read_only_fields = ['id', 'user_email', 'user_first_name', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        # Profession ma'lumotlarini olish
+        profession_data = validated_data.pop('profession')
+        # Yangi profession yaratish
+        profession = Profession.objects.create(**profession_data)
+        # UserProfile yaratish va professionni ulash
+        user_profile = UserProfile.objects.create(profession=profession, **validated_data)
+        return user_profile
 
     def validate_profession(self, value):
         if not value:
