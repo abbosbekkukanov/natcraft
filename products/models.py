@@ -19,11 +19,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     threed_model = models.FileField(upload_to='3d_models/', null=True, blank=True)
-<<<<<<< HEAD
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount in percent")
-=======
-    discount = models.DecimalField(max_digits=5, decimal_places=2,  null=True, blank=True, help_text="Discount in percent")
->>>>>>> 1bb4bd178f0b49abf46df6a055ac7479006b0bd6
     address = models.CharField(max_length=255)
     view_count = models.PositiveIntegerField(default=0) 
     created_at = models.DateTimeField(default=timezone.now)
@@ -95,8 +91,4 @@ class ViewedProduct(models.Model):
         ordering = ['-viewed_at']  # Eng oxirgi ko‘rilgan mahsulotlarni tartibda ko'rsatadi
 
     def __str__(self):
-<<<<<<< HEAD
-        return f"{self.user.username} viewed {self.product.name}"
-=======
         return f"{self.user.email} viewed {self.product.name}"
->>>>>>> 1bb4bd178f0b49abf46df6a055ac7479006b0bd6
