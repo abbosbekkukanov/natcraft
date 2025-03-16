@@ -99,6 +99,30 @@ class ProfessionListView(generics.ListAPIView):
     queryset = Profession.objects.all()
     serializer_class = ProfessionSerializer
 
+
+# class UserProfile 
+
+class GetUserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        try:
+            profile = UserProfile.objects.get(user=user)
+            serializer = UserProfileSerializer(profile)
+            response_data = {
+                "user_id": user.id,
+                "email": user.email,
+                "profile": serializer.data
+            }
+            if not profile.profession:
+                response_data["message"] = "Profession not set. Please update your profile."
+            return Response(response_data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response(
+                {"detail": "Profil topilmadi. Iltimos, profilingizni yarating."},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
 
 class UserProfileViewSet(viewsets.ModelViewSet):
