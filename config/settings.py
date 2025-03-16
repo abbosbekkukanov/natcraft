@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'accounts',
     'main',
     'workshop',
+    'chat',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -35,11 +36,7 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    
+    )
 }
 
 AUTHENTICATION_BACKENDS = (
