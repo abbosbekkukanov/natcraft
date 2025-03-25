@@ -130,12 +130,6 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
-    def get_queryset(self):
-        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
-            return UserProfile.objects.filter(user=self.request.user)
-        return UserProfile.objects.all()
-
-
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
