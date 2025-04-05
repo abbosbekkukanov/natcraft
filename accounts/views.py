@@ -138,6 +138,12 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         
         if instance.user != request.user:
             return Response({"detail": "You can only change your own profile."}, status=status.HTTP_403_FORBIDDEN)
+        data = request.data
+        
+        if "user_first_name" in data:
+            instance.user.first_name = data["user_first_name"]
+            instance.user.save()
+
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):

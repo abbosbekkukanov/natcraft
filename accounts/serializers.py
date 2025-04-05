@@ -209,25 +209,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
 
     def update(self, instance, validated_data):
-        # Bog‘langan User modelining first_name ni yangilash
         user_data = validated_data.pop('user', None)
         if user_data and 'first_name' in user_data:
             instance.user.first_name = user_data['first_name']
             instance.user.save()
 
-        # Professionni handle qilish
         profession_data = validated_data.pop('profession', None)
         if profession_data:
-            # mavjud professionni yangilash yoki yangisini yaratish
             profession, _ = Profession.objects.get_or_create(**profession_data)
             instance.profession = profession
 
-        # Qolgan UserProfile maydonlarini yangilash
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
+            setattr(instance, attr, value if value != "" else None)
         instance.save()
         return instance
+
 
     def validate_profession(self, value):
         if not value:
