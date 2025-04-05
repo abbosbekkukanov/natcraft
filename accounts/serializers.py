@@ -190,13 +190,13 @@ class ProfessionSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user_email = serializers.ReadOnlyField(source='user.email')
-    user_first_name = serializers.CharField(source='user.first_name', read_only=True)
+    user_first_name = serializers.CharField(source='user.first_name')
     profession = ProfessionSerializer()
 
     class Meta:
         model = UserProfile
         fields = "__all__"
-        read_only_fields = ['id', 'user_email', 'user_first_name', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
 
     def create(self, validated_data):
         # Profession ma'lumotlarini olish
