@@ -16,7 +16,7 @@ class Product(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=100)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=16, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     threed_model = models.FileField(upload_to='3d_models/', null=True, blank=True)
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount in percent")
