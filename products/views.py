@@ -1,9 +1,13 @@
 from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
+from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 from .models import Product, Category, Favorite, CartItem, Comment, ViewedProduct
 from .serializers import ProductSerializer, CategorySerializer,  CommentSerializer, ViewedProductSerializer, FavoriteSerializer, CartItemSerializer
-from rest_framework import status
+from .permissions import IsOwnerOrReadOnly
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -21,11 +25,30 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Category.DoesNotExist:
             return Response({"detail": "Kategoriya topilmadi"}, status=404)
+        
+
+class StandardPagination(PageNumberPagination):
+    page_size = 10  # Har bir sahifada 10 ta mahsulot
+    page_size_query_param = 'page_size'  # Foydalanuvchi sahifa hajmini o‘zgartirishi mumkin
+    max_page_size = 100  # Maksimal ruxsat etilgan sahifa hajmi
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = StandardPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['price', 'category']
+    search_fields = ['name', 'description']
+
+    # Foydalanuvchining o‘z mahsulotlarini ko‘rish uchun yangi action
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my_products(self, request):
+        """Foydalanuvchining o‘z mahsulotlarini qaytaradi"""
+        products = Product.objects.filter(user=request.user)
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
 
     # Maxsus action - kategoriya nomi va mahsulot ID'si bilan mahsulotni olish
     @action(detail=False, methods=['get'], url_path='categories/(?P<category_name>[^/]+)/(?P<product_id>\d+)')
@@ -77,7 +100,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
