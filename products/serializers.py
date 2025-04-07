@@ -15,7 +15,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())  # read_only o‘rniga queryset
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
     product_images = ProductImageSerializer(many=True, read_only=True)
     images = serializers.ListField(
         child=serializers.ImageField(), write_only=True, required=False
@@ -29,11 +29,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         images_data = validated_data.pop('images', None)
-        product = Product.objects.create(**validated_data)
+        # Agar contextda request mavjud bo‘lsa, user’ni undan olamiz
+        user = self.context['request'].user if 'request' in self.context else None
+        product = Product.objects.create(user=user, **validated_data)
         if images_data:
             for image_data in images_data:
                 ProductImage.objects.create(product=product, image=image_data)
         return product
+
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

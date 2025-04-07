@@ -13,9 +13,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
 
     # Kategoriya nomi bo'yicha barcha mahsulotlarni olish uchun yangi action
     @action(detail=False, methods=['get'], url_path='(?P<category_name>[^/]+)')
@@ -45,6 +42,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     # filter_backends = [DjangoFilterBackend, SearchFilter]
     # filterset_fields = ['price', 'category']
     # search_fields = ['name', 'description']
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     # Foydalanuvchining o‘z mahsulotlarini ko‘rish uchun yangi action
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
