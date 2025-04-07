@@ -20,6 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
     images = serializers.ListField(
         child=serializers.ImageField(), write_only=True, required=False
     )
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Product

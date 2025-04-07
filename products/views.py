@@ -13,6 +13,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
     # Kategoriya nomi bo'yicha barcha mahsulotlarni olish uchun yangi action
     @action(detail=False, methods=['get'], url_path='(?P<category_name>[^/]+)')
     def category_products(self, request, category_name=None):
