@@ -27,11 +27,15 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def create(self, validated_data):
-        images_data = self.context.get('request').FILES
-        product = Product.objects.create(**validated_data)
-        for image_data in images_data.getlist('images'):
-            ProductImage.objects.create(product=product, image=image_data)
-        return product
+            # `images` ni validated_data dan olib tashlash
+            images_data = validated_data.pop('images', None)
+            # Product obyektini yaratish
+            product = Product.objects.create(**validated_data)
+            # Agar images_data mavjud bo‘lsa, ProductImage obyektlarini yaratish
+            if images_data:
+                for image_data in images_data:
+                    ProductImage.objects.create(product=product, image=image_data)
+            return product
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
