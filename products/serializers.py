@@ -29,9 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         images_data = validated_data.pop('images', None)
-        # Agar contextda request mavjud bo‘lsa, user’ni undan olamiz
-        user = self.context['request'].user if 'request' in self.context else None
-        product = Product.objects.create(user=user, **validated_data)
+        product = Product.objects.create( **validated_data)
         if images_data:
             for image_data in images_data:
                 ProductImage.objects.create(product=product, image=image_data)
