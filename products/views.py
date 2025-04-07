@@ -27,20 +27,20 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Kategoriya topilmadi"}, status=404)
         
 
-class StandardPagination(PageNumberPagination):
-    page_size = 10  # Har bir sahifada 10 ta mahsulot
-    page_size_query_param = 'page_size'  # Foydalanuvchi sahifa hajmini o‘zgartirishi mumkin
-    max_page_size = 100  # Maksimal ruxsat etilgan sahifa hajmi
+# class StandardPagination(PageNumberPagination):
+#     page_size = 10  # Har bir sahifada 10 ta mahsulot
+#     page_size_query_param = 'page_size'  # Foydalanuvchi sahifa hajmini o‘zgartirishi mumkin
+#     max_page_size = 100  
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsOwnerOrReadOnly, permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = StandardPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['price', 'category']
-    search_fields = ['name', 'description']
+    # pagination_class = StandardPagination
+    # filter_backends = [DjangoFilterBackend, SearchFilter]
+    # filterset_fields = ['price', 'category']
+    # search_fields = ['name', 'description']
 
     # Foydalanuvchining o‘z mahsulotlarini ko‘rish uchun yangi action
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
