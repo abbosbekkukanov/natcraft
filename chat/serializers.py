@@ -70,13 +70,19 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = ['id', 'product', 'seller', 'buyer', 'created_at', 'updated_at', 'messages']
-        read_only_fields = ['seller', 'buyer', 'created_at', 'updated_at']  # buyer ham read_only
+        read_only_fields = ['seller', 'buyer', 'created_at', 'updated_at']
 
     def create(self, validated_data):
         request = self.context.get('request')
-        print(f"validated_data: {validated_data}")
         product = validated_data['product'] 
-        print(f"product: {product}")
-        validated_data['seller'] = product.user
-        validated_data['buyer'] = request.user
-        return Chat.objects.create(**validated_data)
+        seller = product.user
+        buyer = request.user
+        print("Validated data:", validated_data)
+        print("Product:", product)
+        print("Seller:", seller)
+        print("Buyer:", buyer)
+        return Chat.objects.create(
+            product=product,
+            seller=seller,
+            buyer=buyer,
+        )
