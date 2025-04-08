@@ -44,13 +44,11 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        chat = self.context.get('chat')  # `send_message` dan keladi
+        chat = self.context.get('chat')
 
-        # Xabar bo‘sh emasligini tekshirish
         if not data.get('content') and not self.context['request'].FILES.getlist('images') and not data.get('voice'):
             raise serializers.ValidationError("Xabar bo'sh bo'lishi mumkin emas")
 
-        # Faqat chat ishtirokchilari xabar yuborishi mumkin
         if chat and request.user not in [chat.seller, chat.buyer]:
             raise serializers.ValidationError("Siz bu chatda xabar yubora olmaysiz")
 
@@ -65,16 +63,15 @@ class MessageSerializer(serializers.ModelSerializer):
             MessageImage.objects.create(message=message, image=image_data)
         return message
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         images_data = self.context.get('request').FILES.getlist('images')
-        message = self.instance
         for attr, value in validated_data.items():
-            setattr(message, attr, value)
-        message.save()
+            setattr(instance, attr, value)
+        instance.save()
         if images_data:
             for image_data in images_data:
-                MessageImage.objects.create(message=message, image=image_data)
-        return message
+                MessageImage.objects.create(message=instance, image=image_data)
+        return instance
 
 class ChatSerializer(serializers.ModelSerializer):
     seller = UserSerializer(read_only=True)

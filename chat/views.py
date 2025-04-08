@@ -81,7 +81,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response({"error": "Faqat o‘zingizning xabaringizni tahrirlashingiz mumkin"}, status=status.HTTP_403_FORBIDDEN)
         serializer = MessageSerializer(message, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            serializer.save()  # Hech qanday qo‘shimcha argument yo‘q
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
