@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Chat, Message, MessageImage, Reaction
-from products.serializers import ProductSerializer
+from products.serializers import ProductSerializer, Product
 from accounts.models import CustomUser, UserProfile
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -74,8 +74,12 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        print("Serializer konteksti:", self.context)
-        product = validated_data.get('product')
+        print(f"Validated date: {validated_data}")
+        product_id = validated_data.get('product')  # Bu yerda ID keladi
+        print(f"Product ID: {product_id}")
+        product = Product.objects.get(id=product_id)  # ID’dan Product obyekti olamiz
+        print(f"Product: {product}")
         validated_data['seller'] = product.user
         validated_data['buyer'] = request.user
+        validated_data['product'] = product  # To‘liq Product obyekti qo‘shiladi
         return Chat.objects.create(**validated_data)

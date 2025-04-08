@@ -19,7 +19,6 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Chat.objects.filter(models.Q(seller=user) | models.Q(buyer=user))
 
     def create(self, request, *args, **kwargs):
-        """Yangi chat yaratish"""
         product_id = request.data.get('product')
         if not product_id:
             return Response({"error": "Mahsulot ID'si talab qilinadi"}, status=status.HTTP_400_BAD_REQUEST)
@@ -33,8 +32,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(existing_chat)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # Serializerga context sifatida request uzatamiz
-        serializer = self.get_serializer(data={'product': product.id}, context={'request': request})
+        serializer = self.get_serializer(data={'product': product_id}, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
