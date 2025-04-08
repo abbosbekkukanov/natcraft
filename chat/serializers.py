@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Chat, Message, MessageImage, Reaction
-from products.serializers import ProductSerializer, Product
+from products.serializers import ProductSerializer
+from products.models import Product
 from accounts.models import CustomUser, UserProfile
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -30,14 +31,15 @@ class ReactionSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    images = MessageImageSerializer(many=True, read_only=True)  # Ko‘p rasmlar
-    voice = serializers.FileField(required=False)  # Ovozli xabar
-    reply_to = serializers.PrimaryKeyRelatedField(queryset=Message.objects.all(), required=False)  # Javob xabari ID’si
-    reactions = ReactionSerializer(many=True, read_only=True)  # Reaktsiyalar
+    images = MessageImageSerializer(many=True, read_only=True)
+    voice = serializers.FileField(required=False)
+    reply_to = serializers.PrimaryKeyRelatedField(queryset=Message.objects.all(), required=False)
+    reactions = ReactionSerializer(many=True, read_only=True)
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False)  # Yangi: mahsulot ixtiyoriy
 
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'content', 'images', 'voice', 'reply_to', 'reactions', 'created_at', 'updated_at', 'is_read']
+        fields = ['id', 'chat', 'sender', 'content', 'product', 'images', 'voice', 'reply_to', 'reactions', 'created_at', 'updated_at', 'is_read']
         read_only_fields = ['chat', 'sender', 'created_at', 'updated_at', 'is_read']
 
     def validate(self, data):
@@ -45,11 +47,10 @@ class MessageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Xabar bo'sh bo'lishi mumkin emas")
         return data
 
-
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['sender'] = request.user
-        images_data = request.FILES.getlist('images')  # Ko‘p rasmlarni olish
+        images_data = request.FILES.getlist('images')
         message = Message.objects.create(**validated_data)
         for image_data in images_data:
             MessageImage.objects.create(message=message, image=image_data)
@@ -62,7 +63,6 @@ class MessageSerializer(serializers.ModelSerializer):
             setattr(message, attr, value)
         message.save()
         if images_data:
-            # Eski rasmlarni o‘chirib, yangilarini qo‘shish mumkin yoki qo‘shib borish
             for image_data in images_data:
                 MessageImage.objects.create(message=message, image=image_data)
         return message
@@ -70,7 +70,7 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     seller = UserSerializer(read_only=True)
     buyer = UserSerializer(read_only=True)
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())  # ID uchun
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False)  # Ixtiyoriy
     messages = MessageSerializer(many=True, read_only=True)
 
     class Meta:
@@ -80,15 +80,11 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        product = validated_data['product'] 
-        seller = product.user
-        buyer = request.user
-        print("Validated data:", validated_data)
-        print("Product:", product)
-        print("Seller:", seller)
-        print("Buyer:", buyer)
+        seller_id = validated_data.get('seller')  # Frontenddan keladi
+        seller = CustomUser.objects.get(id=seller_id)
+        product = validated_data.get('product', None)  # Ixtiyoriy
         return Chat.objects.create(
             product=product,
             seller=seller,
-            buyer=buyer,
+            buyer=request.user,
         )

@@ -7,7 +7,7 @@ from products.models import Product
 from django.shortcuts import get_object_or_404
 from django.db import models
 from .permissions import IsChatParticipant
-
+from accounts.models import CustomUser
 
 class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
@@ -19,26 +19,35 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Chat.objects.filter(models.Q(seller=user) | models.Q(buyer=user))
 
     def create(self, request, *args, **kwargs):
-        product_id = request.data.get('product')
-        if not product_id:
-            return Response({"error": "Mahsulot ID'si talab qilinadi"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        product = get_object_or_404(Product, id=product_id)
-        if product.user == request.user:
+        """Yangi chat yaratish yoki mavjud chatni qaytarish"""
+        seller_id = request.data.get('seller')  # Frontenddan sotuvchi ID’si keladi
+        product_id = request.data.get('product')  # Ixtiyoriy mahsulot ID’si
+
+        if not seller_id:
+            return Response({"error": "Sotuvchi ID’si talab qilinadi"}, status=status.HTTP_400_BAD_REQUEST)
+
+        seller = get_object_or_404(CustomUser, id=seller_id)
+        if seller == request.user:
             return Response({"error": "O‘zingiz bilan chat boshlay olmaysiz"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        existing_chat = Chat.objects.filter(product=product, seller=product.user, buyer=request.user).first()
+
+        # Mavjud chatni tekshirish
+        existing_chat = Chat.objects.filter(seller=seller, buyer=request.user).first()
         if existing_chat:
             serializer = self.get_serializer(existing_chat)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        serializer = self.get_serializer(data={'product': product_id}, context={'request': request})
+        # Yangi chat yaratish
+        data = {'seller': seller_id}
+        if product_id:
+            product = get_object_or_404(Product, id=product_id)
+            data['product'] = product_id
+        serializer = self.get_serializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
-        serializer.save(context={'request': self.request})
+        serializer.save()
 
     @action(detail=True, methods=['get'], url_path='messages')
     def get_messages(self, request, pk=None):
@@ -71,7 +80,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(detail=True, methods=['put'], url_path='messages/(?P<message_id>\d+)/edit')
     def edit_message(self, request, pk=None, message_id=None):
         chat = self.get_object()

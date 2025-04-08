@@ -3,16 +3,14 @@ from django.conf import settings
 from products.models import Product
     
 class Chat(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='chats')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='chats')
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='seller_chats')
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='buyer_chats')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('seller', 'buyer')  # Har bir chatda faqat bitta sotuvchi va xaridor bo'lishi kerak
-        ordering = ['-created_at']  # Yangi chatlar yuqorida ko‘rsatiladi   
-        
+        unique_together = ('seller', 'buyer')  # Sotuvchi va xaridor o‘rtasida bitta chat
 
     def __str__(self):
         return f"Chat for {self.product.name} between {self.seller.email} and {self.buyer.email}"
@@ -21,6 +19,7 @@ class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField(blank=True, null=True)  # Matn ixtiyoriy bo‘ladi, chunki rasm yuborish ham mumkin
+    product = models.ForeignKey( Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='message_mentions')  # Xabar qaysi mahsulot haqida ekanligi (ixtiyoriy)
     voice = models.FileField(upload_to='chat_voices/', null=True, blank=True)   # Ovozni yuborish uchun maydon
     reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')  # Javob xabari
     created_at = models.DateTimeField(auto_now_add=True)
