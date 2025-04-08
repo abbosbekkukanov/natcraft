@@ -64,22 +64,19 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     seller = UserSerializer(read_only=True)
     buyer = UserSerializer(read_only=True)
-    product = ProductSerializer(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())  # ID uchun
     messages = MessageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Chat
         fields = ['id', 'product', 'seller', 'buyer', 'created_at', 'updated_at', 'messages']
-        read_only_fields = ['seller', 'created_at', 'updated_at']
+        read_only_fields = ['seller', 'buyer', 'created_at', 'updated_at']  # buyer ham read_only
 
     def create(self, validated_data):
         request = self.context.get('request')
-        print(f"Validated date: {validated_data}")
-        product_id = validated_data.get('product')  # Bu yerda ID keladi
-        print(f"Product ID: {product_id}")
-        product = Product.objects.get(id=product_id)  # ID’dan Product obyekti olamiz
-        print(f"Product: {product}")
+        print(f"validated_data: {validated_data}")
+        product = validated_data['product'] 
+        print(f"product: {product}")
         validated_data['seller'] = product.user
         validated_data['buyer'] = request.user
-        validated_data['product'] = product  # To‘liq Product obyekti qo‘shiladi
         return Chat.objects.create(**validated_data)
