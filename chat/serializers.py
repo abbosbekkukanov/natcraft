@@ -74,6 +74,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
+        print("Serializer konteksti:", self.context)
         product = validated_data.get('product')
         validated_data['seller'] = product.user
         validated_data['buyer'] = request.user
