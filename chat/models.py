@@ -10,7 +10,9 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('product', 'seller', 'buyer')  # Har bir mahsulot bo‘yicha sotuvchi va xaridor uchun faqat bitta chat
+        unique_together = ('seller', 'buyer')  # Har bir chatda faqat bitta sotuvchi va xaridor bo'lishi kerak
+        ordering = ['-created_at']  # Yangi chatlar yuqorida ko‘rsatiladi   
+        
 
     def __str__(self):
         return f"Chat for {self.product.name} between {self.seller.email} and {self.buyer.email}"
