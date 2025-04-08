@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.db import models
 from .permissions import IsChatParticipant
 
+
 class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     permission_classes = [permissions.IsAuthenticated, IsChatParticipant]
@@ -32,7 +33,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(existing_chat)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        serializer = self.get_serializer(data={'product': product.id})
+        # Serializerga context sifatida request uzatamiz
+        serializer = self.get_serializer(data={'product': product.id}, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -40,9 +42,9 @@ class ChatViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+    # Qolgan metodlar o‘zgarmagan holda qoladi
     @action(detail=True, methods=['get'], url_path='messages')
     def get_messages(self, request, pk=None):
-        """Chatdagi barcha xabarlarni olish"""
         chat = self.get_object()
         messages = chat.messages.all()
         serializer = MessageSerializer(messages, many=True)
@@ -50,7 +52,6 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='send-message')
     def send_message(self, request, pk=None):
-        """Chatga xabar yuborish (matn, rasm, ovoz, javob)"""
         chat = self.get_object()
         serializer = MessageSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -60,13 +61,11 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='messages/(?P<message_id>\d+)/react')
     def add_reaction(self, request, pk=None, message_id=None):
-        """Xabarga reaktsiya qo‘yish"""
         chat = self.get_object()
         message = get_object_or_404(Message, id=message_id, chat=chat)
         reaction_data = {'message': message.id, 'reaction': request.data.get('reaction')}
         serializer = ReactionSerializer(data=reaction_data, context={'request': request})
         if serializer.is_valid():
-            # Agar foydalanuvchi avval reaktsiya qo‘ygan bo‘lsa, yangilash
             existing_reaction = Reaction.objects.filter(message=message, user=request.user).first()
             if existing_reaction:
                 existing_reaction.reaction = reaction_data['reaction']
@@ -75,10 +74,9 @@ class ChatViewSet(viewsets.ModelViewSet):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
     @action(detail=True, methods=['put'], url_path='messages/(?P<message_id>\d+)/edit')
     def edit_message(self, request, pk=None, message_id=None):
-        """Xabarni tahrirlash"""
         chat = self.get_object()
         message = get_object_or_404(Message, id=message_id, chat=chat)
         if message.sender != request.user:
@@ -91,7 +89,6 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'], url_path='messages/(?P<message_id>\d+)/delete')
     def delete_message(self, request, pk=None, message_id=None):
-        """Xabarni o‘chirish"""
         chat = self.get_object()
         message = get_object_or_404(Message, id=message_id, chat=chat)
         if message.sender != request.user:
