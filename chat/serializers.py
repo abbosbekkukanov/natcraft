@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'first_name', 'last_name', 'profile']
+        fields = ['id', 'email', 'first_name', 'profile']
 
 class MessageImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,7 +38,13 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = ['id', 'chat', 'sender', 'content', 'images', 'voice', 'reply_to', 'reactions', 'created_at', 'updated_at', 'is_read']
-        read_only_fields = ['sender', 'created_at', 'updated_at', 'is_read']
+        read_only_fields = ['chat', 'sender', 'created_at', 'updated_at', 'is_read']
+
+    def validate(self, data):
+        if not data.get('content') and not self.context['request'].FILES.getlist('images') and not data.get('voice'):
+            raise serializers.ValidationError("Xabar bo'sh bo'lishi mumkin emas")
+        return data
+
 
     def create(self, validated_data):
         request = self.context.get('request')
