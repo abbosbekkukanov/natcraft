@@ -40,9 +40,8 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save(context={'request': self.request})
 
-    # Qolgan metodlar o‘zgarmagan holda qoladi
     @action(detail=True, methods=['get'], url_path='messages')
     def get_messages(self, request, pk=None):
         chat = self.get_object()
