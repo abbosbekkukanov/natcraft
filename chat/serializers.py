@@ -67,6 +67,7 @@ class MessageSerializer(serializers.ModelSerializer):
         images_data = self.context.get('request').FILES.getlist('images')
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+        instance.is_edited = True
         instance.save()
         if images_data:
             for image_data in images_data:
