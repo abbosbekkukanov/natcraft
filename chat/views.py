@@ -13,12 +13,10 @@ class ChatViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsChatParticipant]
 
     def get_queryset(self):
-        """Faqat foydalanuvchi ishtirok etgan chatlarni qaytaradi"""
         user = self.request.user
         return Chat.objects.filter(models.Q(seller=user) | models.Q(buyer=user))
 
     def create(self, request, *args, **kwargs):
-        """Yangi chat yaratish yoki mavjud chatni qaytarish"""
         product_id = request.data.get('product')
 
         if not product_id:
@@ -53,7 +51,7 @@ class ChatViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='send-message')
     def send_message(self, request, pk=None):
         chat = self.get_object()
-        serializer = MessageSerializer(data=request.data, context={'request': request})
+        serializer = MessageSerializer(data=request.data, context={'request': request, 'chat': chat})
         if serializer.is_valid():
             serializer.save(chat=chat)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -98,8 +96,6 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'], url_path='delete')
     def delete_chat(self, request, pk=None):
-        """Chatni o‘chirish"""
         chat = self.get_object()
-        # `IsChatParticipant` ruxsati allaqachon seller yoki buyer ekanligini tekshiradi
         chat.delete()
         return Response({"status": "Chat o‘chirildi"}, status=status.HTTP_204_NO_CONTENT)

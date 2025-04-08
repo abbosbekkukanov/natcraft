@@ -43,8 +43,17 @@ class MessageSerializer(serializers.ModelSerializer):
         read_only_fields = ['chat', 'sender', 'created_at', 'updated_at', 'is_read']
 
     def validate(self, data):
+        request = self.context.get('request')
+        chat = self.context.get('chat')  # `send_message` dan keladi
+
+        # Xabar bo‘sh emasligini tekshirish
         if not data.get('content') and not self.context['request'].FILES.getlist('images') and not data.get('voice'):
             raise serializers.ValidationError("Xabar bo'sh bo'lishi mumkin emas")
+
+        # Faqat chat ishtirokchilari xabar yuborishi mumkin
+        if chat and request.user not in [chat.seller, chat.buyer]:
+            raise serializers.ValidationError("Siz bu chatda xabar yubora olmaysiz")
+
         return data
 
     def create(self, validated_data):
@@ -70,7 +79,7 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     seller = UserSerializer(read_only=True)
     buyer = UserSerializer(read_only=True)
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False)  # Ixtiyoriy
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False)
     messages = MessageSerializer(many=True, read_only=True)
 
     class Meta:
@@ -80,15 +89,13 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        product = validated_data.get('product', None)  # Ixtiyoriy mahsulot
+        product = validated_data.get('product', None)
         
-        # Agar product kelsa, sotuvchi avtomatik aniqlanadi
         if product:
             seller = product.user
         else:
             raise serializers.ValidationError("Chat boshlash uchun mahsulot ID’si talab qilinadi")
 
-        # Chat yaratish
         return Chat.objects.create(
             product=product,
             seller=seller,
