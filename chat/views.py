@@ -7,7 +7,6 @@ from products.models import Product
 from django.shortcuts import get_object_or_404
 from django.db import models
 from .permissions import IsChatParticipant
-from accounts.models import CustomUser
 
 class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
@@ -20,27 +19,22 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Yangi chat yaratish yoki mavjud chatni qaytarish"""
-        seller_id = request.data.get('seller')  # Frontenddan sotuvchi ID’si keladi
-        product_id = request.data.get('product')  # Ixtiyoriy mahsulot ID’si
+        product_id = request.data.get('product')
 
-        if not seller_id:
-            return Response({"error": "Sotuvchi ID’si talab qilinadi"}, status=status.HTTP_400_BAD_REQUEST)
+        if not product_id:
+            return Response({"error": "Mahsulot ID’si talab qilinadi"}, status=status.HTTP_400_BAD_REQUEST)
 
-        seller = get_object_or_404(CustomUser, id=seller_id)
+        product = get_object_or_404(Product, id=product_id)
+        seller = product.user
         if seller == request.user:
             return Response({"error": "O‘zingiz bilan chat boshlay olmaysiz"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Mavjud chatni tekshirish
         existing_chat = Chat.objects.filter(seller=seller, buyer=request.user).first()
         if existing_chat:
             serializer = self.get_serializer(existing_chat)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # Yangi chat yaratish
-        data = {'seller': seller_id}
-        if product_id:
-            product = get_object_or_404(Product, id=product_id)
-            data['product'] = product_id
+        data = {'product': product_id}
         serializer = self.get_serializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -101,3 +95,11 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response({"error": "Faqat o‘zingizning xabaringizni o‘chirishingiz mumkin"}, status=status.HTTP_403_FORBIDDEN)
         message.delete()
         return Response({"status": "Xabar o‘chirildi"}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['delete'], url_path='delete')
+    def delete_chat(self, request, pk=None):
+        """Chatni o‘chirish"""
+        chat = self.get_object()
+        # `IsChatParticipant` ruxsati allaqachon seller yoki buyer ekanligini tekshiradi
+        chat.delete()
+        return Response({"status": "Chat o‘chirildi"}, status=status.HTTP_204_NO_CONTENT)

@@ -35,7 +35,7 @@ class MessageSerializer(serializers.ModelSerializer):
     voice = serializers.FileField(required=False)
     reply_to = serializers.PrimaryKeyRelatedField(queryset=Message.objects.all(), required=False)
     reactions = ReactionSerializer(many=True, read_only=True)
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False)  # Yangi: mahsulot ixtiyoriy
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False)
 
     class Meta:
         model = Message
@@ -80,9 +80,15 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        seller_id = validated_data.get('seller')  # Frontenddan keladi
-        seller = CustomUser.objects.get(id=seller_id)
-        product = validated_data.get('product', None)  # Ixtiyoriy
+        product = validated_data.get('product', None)  # Ixtiyoriy mahsulot
+        
+        # Agar product kelsa, sotuvchi avtomatik aniqlanadi
+        if product:
+            seller = product.user
+        else:
+            raise serializers.ValidationError("Chat boshlash uchun mahsulot ID’si talab qilinadi")
+
+        # Chat yaratish
         return Chat.objects.create(
             product=product,
             seller=seller,
