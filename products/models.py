@@ -2,12 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 # Create your models here.
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(default='No description provided')
     image = models.ImageField(upload_to='category_images/', null=True, blank=True)
 
+    def clean(self):
+        self.name = self.name.lower()
+        if Category.objects.filter(name=self.name).exists():
+            raise ValidationError(f"Category with name '{self.name}' already exists.")
 
     def __str__(self):
         return self.name
@@ -65,8 +70,6 @@ class CartItem(models.Model):
         return f"{self.quantity} of {self.product.name} in {self.user.email}'s cart"
 
 
-
-
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
@@ -80,15 +83,13 @@ class Comment(models.Model):
         return f"Comment by {self.user.email} on {self.product.name}"
 
 
-# 19.11.2024
-
 class ViewedProduct(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='viewed_products')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='viewed_by')
     viewed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-viewed_at']  # Eng oxirgi ko‘rilgan mahsulotlarni tartibda ko'rsatadi
+        ordering = ['-viewed_at']
 
     def __str__(self):
         return f"{self.user.email} viewed {self.product.name}"

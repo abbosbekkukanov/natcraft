@@ -36,7 +36,6 @@ class ProductSerializer(serializers.ModelSerializer):
         return product
 
 
-
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
@@ -67,7 +66,6 @@ class CommentSerializer(serializers.ModelSerializer):
         return comment
     
 
-# 19.11.2024
 class ViewedProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewedProduct

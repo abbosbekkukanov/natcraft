@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, generics
+from rest_framework import viewsets, permissions, generics, serializers
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
@@ -7,20 +7,19 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from .models import Product, Category, Favorite, CartItem, Comment, ViewedProduct
 from .serializers import ProductSerializer, CategorySerializer,  CommentSerializer, ViewedProductSerializer, FavoriteSerializer, CartItemSerializer
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdminForCreate
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAdminForCreate]
 
 
-    # Kategoriya nomi bo'yicha barcha mahsulotlarni olish uchun yangi action
     @action(detail=False, methods=['get'], url_path='(?P<category_name>[^/]+)')
     def category_products(self, request, category_name=None):
         try:
             # Kategoriya nomiga ko'ra kategoriya olish
             category = Category.objects.get(name=category_name)
-            # Ushbu kategoriya bo'yicha barcha mahsulotlarni olish
             products = Product.objects.filter(category=category)
             serializer = ProductSerializer(products, many=True)
             return Response(serializer.data)
@@ -33,7 +32,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
 #     page_size_query_param = 'page_size'  # Foydalanuvchi sahifa hajmini o‘zgartirishi mumkin
 #     max_page_size = 100  
 
-
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -44,6 +42,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     # search_fields = ['name', 'description']
 
     def perform_create(self, serializer):
+        if not self.request.user.is_verified:
+            raise serializers.ValidationError(
+                {"detail": "Faqat tasdiqlangan sotuvchilar mahsulot qo‘shishi mumkin."}
+            )
         serializer.save(user=self.request.user)
 
     # Foydalanuvchining o‘z mahsulotlarini ko‘rish uchun yangi action
@@ -109,7 +111,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-# 19.19.2024
 
 class LastViewedProductsView(generics.ListAPIView):
     serializer_class = ViewedProductSerializer

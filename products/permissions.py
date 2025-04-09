@@ -7,3 +7,9 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
         # POST, PUT, DELETE uchun faqat egasi ruxsatli
         return obj.user == request.user
+    
+class IsAdminForCreate(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method == 'POST':  # Create (POST) so'rovlari uchun faqat adminga ruxsat
+            return request.user and request.user.is_staff
+        return True 

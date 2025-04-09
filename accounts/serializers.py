@@ -7,8 +7,6 @@ from .models import EmailConfirmation, PasswordResetCode, UserProfile, Professio
 import random
 import string
 
-
-
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):

@@ -4,22 +4,29 @@ from rest_framework.response import Response
 from .models import Workshop, WorkshopImage360, WorkshopRating
 from .serializers import WorkshopSerializer, WorkshopImage360Serializer, WorkshopRatingSerializer
 from .permissions import IsOwnerOrReadOnly
+from rest_framework import serializers
+
 
 class WorkshopViewSet(viewsets.ModelViewSet):
     serializer_class = WorkshopSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        # Barcha ustaxonalarni qaytaradi, lekin faqat o‘z ustaxonasini tahrir qilish mumkin
         return Workshop.objects.all()
 
     def perform_create(self, serializer):
-        # Workshop yaratishda faqat joriy foydalanuvchi bog‘lanadi
+        if not self.request.user.is_verified:
+            raise serializers.ValidationError(
+                {"detail": "Faqat tasdiqlangan sotuvchilar ustaxona yarata oladi."}
+            )
+        if Workshop.objects.filter(user=self.request.user).exists():
+            raise serializers.ValidationError(
+                {"detail": "Sizda allaqachon ustaxona mavjud."}
+            )
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def my_workshop(self, request):
-        # Faqat foydalanuvchining o‘z ustaxonasini qaytaradi
         try:
             workshop = Workshop.objects.get(user=request.user)
             serializer = self.get_serializer(workshop)

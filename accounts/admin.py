@@ -3,9 +3,9 @@ from .models import CustomUser, UserProfile, Profession, EmailConfirmation, Pass
 
 # Custom User Admin
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'is_active', 'is_staff', 'date_joined')
-    search_fields = ('email', 'first_name', 'last_name')
-    list_filter = ('is_active', 'is_staff', 'date_joined')
+    list_display = ('email', 'first_name', 'is_active', 'is_verified', 'is_staff', 'date_joined')
+    search_fields = ('email', 'first_name', 'is_verified')
+    list_filter = ('is_active', 'is_verified', 'is_staff', 'date_joined')
     ordering = ('-date_joined',)
 
 admin.site.register(CustomUser, CustomUserAdmin)
