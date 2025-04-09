@@ -189,6 +189,7 @@ class ProfessionSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     user_email = serializers.ReadOnlyField(source='user.email')
     user_first_name = serializers.CharField(source='user.first_name')
+    is_verified = serializers.BooleanField(source='user.is_verified', read_only=True)
     profession = ProfessionSerializer()
 
     class Meta:
