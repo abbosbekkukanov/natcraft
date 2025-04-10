@@ -5,6 +5,7 @@ from .models import Chat, Message, Reaction
 from .serializers import MessageSerializer, ReactionSerializer
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
+from products.models import Product
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def create_chat(self, data):
