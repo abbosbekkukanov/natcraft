@@ -26,8 +26,13 @@ class ReactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reaction
-        fields = ['id', 'user', 'reaction', 'created_at']
+        fields = ['id', 'message', 'user', 'reaction', 'created_at']
         read_only_fields = ['user', 'created_at']
+
+    def validate_reaction(self, value):
+        if not value:
+            raise serializers.ValidationError("Reaction field cannot be empty.")
+        return value
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
