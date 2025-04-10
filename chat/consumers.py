@@ -1,4 +1,5 @@
 import json
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Chat, Message, Reaction
@@ -6,6 +7,8 @@ from .serializers import MessageSerializer, ReactionSerializer
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from products.models import Product
+
+logger = logging.getLogger(__name__)
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def create_chat(self, data):
@@ -34,10 +37,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.chat_id = self.scope['url_route']['kwargs']['chat_id']
         self.chat_group_name = f'chat_{self.chat_id}'
+        logger.info(f"Ulanish: chat_id={self.chat_id}, user={self.scope['user']}")
 
         # Foydalanuvchi autentifikatsiya qilinganligini tekshirish
         if self.scope['user'].is_anonymous:
-            await self.close(code=4001)  # Autentifikatsiya xatosi
+            logger.error("Anonim foydalanuvchi ulanishga urindi")
+            await self.close(code=4001)
             return
 
         # Foydalanuvchi chat ishtirokchisi ekanligini tekshirish
@@ -47,7 +52,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
             await self.accept()
+            logger.info(f"Ulanish muvaffaqiyatli: chat_id={self.chat_id}")
         else:
+            logger.error(f"Foydalanuvchi {self.scope['user']} chat {self.chat_id} da ishtirokchi emas")
             await self.close(code=4003) 
 
     async def disconnect(self, close_code):
@@ -60,6 +67,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
             action = data.get('action')
+            logger.info(f"Action: {action}")
             if not action:
                 await self.send_error("Action talab qilinadi")
                 return
@@ -78,7 +86,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await handler(data)
             else:
                 await self.send_error("Noto‘g‘ri action")
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON xatosi: {str(e)}")
             await self.send_error("Xato JSON formati")
 
     # Yordamchi metodlar
