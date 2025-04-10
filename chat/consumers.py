@@ -65,6 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
 
             handlers = {
+                'create_chat': self.create_chat,
                 'send_message': self.send_message,
                 'edit_message': self.edit_message,
                 'delete_message': self.delete_message,
