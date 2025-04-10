@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'main',
     'workshop',
     'chat',
+    'notifications',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -180,7 +181,23 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'uze.investment@gmail.com'
 
-
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+        },
+    },
+    'loggers': {
+        '': {  # Bo‘sh string barcha loglarni qamrab oladi
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"  # Sessiyalarni ma'lumotlar bazasida saqlash
 SESSION_COOKIE_AGE = 86400  # 1 kun davomida sessiya amal qiladi

@@ -72,6 +72,17 @@ class ChatViewSet(viewsets.ModelViewSet):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['delete'], url_path='messages/(?P<message_id>\d+)/remove-reaction')
+    def remove_reaction(self, request, pk=None, message_id=None):
+        """Foydalanuvchi o‘zi qo‘ygan reaksiyani o‘chiradi"""
+        chat = self.get_object()
+        message = get_object_or_404(Message, id=message_id, chat=chat)
+        reaction = get_object_or_404(Reaction, message=message, user=request.user)
+        
+        # Faqat o‘zi qo‘ygan reaksiyani o‘chirishi mumkin
+        reaction.delete()
+        return Response({"status": "Reaksiya o‘chirildi"}, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['put'], url_path='messages/(?P<message_id>\d+)/edit')
     def edit_message(self, request, pk=None, message_id=None):
