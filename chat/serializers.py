@@ -39,7 +39,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'content', 'product', 'images', 'voice', 'reply_to', 'reactions', 'created_at', 'updated_at', 'is_read']
+        fields = ['id', 'chat', 'sender', 'content', 'product', 'images', 'voice', 'reply_to', 'reactions', 'created_at', 'updated_at', 'is_read', 'is_edited']
         read_only_fields = ['chat', 'sender', 'created_at', 'updated_at', 'is_read']
 
     def validate(self, data):
