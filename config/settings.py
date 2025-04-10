@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'channels',
     # 'django_filters',
     'products',
     'accounts',
@@ -45,6 +46,17 @@ REST_FRAMEWORK = {
     #     'django_filters.rest_framework.DjangoFilterBackend',
     #     'rest_framework.filters.SearchFilter',
     # ],
+}
+
+ASGI_APPLICATION = 'config.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -191,7 +203,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        '': {  # Bo‘sh string barcha loglarni qamrab oladi
+        '': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
@@ -199,7 +211,7 @@ LOGGING = {
     },
 }
 
-SESSION_ENGINE = "django.contrib.sessions.backends.db"  # Sessiyalarni ma'lumotlar bazasida saqlash
-SESSION_COOKIE_AGE = 86400  # 1 kun davomida sessiya amal qiladi
-SESSION_SAVE_EVERY_REQUEST = True  # Har bir requestda sessiya yangilanadi
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Brauzer yopilganda sessiya o‘chmaydi
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False 
