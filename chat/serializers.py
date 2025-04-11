@@ -1,3 +1,4 @@
+# chat/serializers.py
 from rest_framework import serializers
 from .models import Chat, Message, MessageImage, Reaction
 from products.serializers import ProductSerializer
@@ -48,28 +49,49 @@ class MessageSerializer(serializers.ModelSerializer):
         read_only_fields = ['chat', 'sender', 'created_at', 'updated_at', 'is_read']
 
     def validate(self, data):
-        request = self.context.get('request')
         chat = self.context.get('chat')
+        # API uchun request.user, WebSocket uchun sender ishlatiladi
+        user = None
+        if self.context.get('request'):
+            user = self.context['request'].user
+        elif self.context.get('sender'):
+            user = self.context['sender']
 
-        if not data.get('content') and not self.context['request'].FILES.getlist('images') and not data.get('voice'):
+        if not user:
+            raise serializers.ValidationError("Foydalanuvchi aniqlanmadi")
+
+        # Xabar bo‘sh emasligini tekshirish
+        images = None
+        if self.context.get('request'):
+            images = self.context['request'].FILES.getlist('images')
+        if not data.get('content') and not images and not data.get('voice'):
             raise serializers.ValidationError("Xabar bo'sh bo'lishi mumkin emas")
 
-        if chat and request.user not in [chat.seller, chat.buyer]:
+        # Chat ishtirokchisini tekshirish
+        if chat and user not in [chat.seller, chat.buyer]:
             raise serializers.ValidationError("Siz bu chatda xabar yubora olmaysiz")
 
         return data
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        validated_data['sender'] = request.user
-        images_data = request.FILES.getlist('images')
-        message = Message.objects.create(**validated_data)
-        for image_data in images_data:
-            MessageImage.objects.create(message=message, image=image_data)
-        return message
+        # API uchun
+        if self.context.get('request'):
+            request = self.context.get('request')
+            validated_data['sender'] = request.user
+            images_data = request.FILES.getlist('images')
+            message = Message.objects.create(**validated_data)
+            for image_data in images_data:
+                MessageImage.objects.create(message=message, image=image_data)
+            return message
+        # WebSocket uchun
+        elif self.context.get('sender'):
+            validated_data['sender'] = self.context['sender']
+            message = Message.objects.create(**validated_data)
+            return message
+        raise serializers.ValidationError("Foydalanuvchi aniqlanmadi")
 
     def update(self, instance, validated_data):
-        images_data = self.context.get('request').FILES.getlist('images')
+        images_data = self.context.get('request', {}).FILES.getlist('images') if self.context.get('request') else []
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.is_edited = True

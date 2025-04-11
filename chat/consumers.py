@@ -117,7 +117,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if product_id:
             message_data['product'] = product_id
 
-        serializer = MessageSerializer(data=message_data, context={'chat': chat})
+        serializer = MessageSerializer(data=message_data, context={'chat': chat, 'sender': self.scope['user']})
         if await database_sync_to_async(serializer.is_valid)():
             message = await database_sync_to_async(serializer.save)()
             await self.channel_layer.group_send(
@@ -164,12 +164,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message.content = content
         message.is_edited = True
         await database_sync_to_async(message.save)()
+        chat = await database_sync_to_async(get_object_or_404)(Chat, id=self.chat_id)
         await self.channel_layer.group_send(
             self.chat_group_name,
             {
                 'type': 'chat_message',
                 'action': 'edit',
-                'message': MessageSerializer(message).data
+                'message': MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
             }
         )
 
