@@ -11,7 +11,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ['profile_image', 'bio', 'phone_number', 'address']
 
 class UserSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(read_only=True)
+    profile = UserProfileSerializer(read_only=True, required=False, allow_null=True)
 
     class Meta:
         model = CustomUser
