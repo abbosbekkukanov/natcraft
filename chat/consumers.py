@@ -168,6 +168,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
+        sender = await database_sync_to_async(lambda: message.sender)()
         if message.sender != self.scope['user']:
             await self.send_error("Faqat o‘zingizning xabaringizni tahrirlashingiz mumkin")
             return
@@ -191,6 +192,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
+        sender = await database_sync_to_async(lambda: message.sender)()
         if message.sender != self.scope['user']:
             await self.send_error("Faqat o‘zingizning xabaringizni o‘chirishingiz mumkin")
             return

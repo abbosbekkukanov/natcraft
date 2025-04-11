@@ -36,13 +36,13 @@ class ReactionSerializer(serializers.ModelSerializer):
         return value
     
 class MinimalMessageSerializer(serializers.ModelSerializer):
-    sender = UserSerializer(read_only=True)
+    sender_id = serializers.PrimaryKeyRelatedField(source='sender', read_only=True)
     reply_to = serializers.PrimaryKeyRelatedField(queryset=Message.objects.all(), required=False)
 
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'content', 'reply_to', 'is_edited', 'created_at']
-        read_only_fields = ['chat', 'sender', 'created_at', 'is_edited']
+        fields = ['id', 'chat', 'sender_id', 'content', 'reply_to', 'is_edited', 'created_at']
+        read_only_fields = ['chat', 'sender_id', 'created_at', 'is_edited']
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
