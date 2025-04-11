@@ -110,3 +110,5 @@ class ChatViewSet(viewsets.ModelViewSet):
     #     chat = self.get_object()
     #     chat.delete()
     #     return Response({"status": "Chat o‘chirildi"}, status=status.HTTP_204_NO_CONTENT)
+    
+    

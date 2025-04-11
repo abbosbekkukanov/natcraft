@@ -10,7 +10,7 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('seller', 'buyer')  # Sotuvchi va xaridor o‘rtasida bitta chat
+        unique_together = ('seller', 'buyer')
 
     def __str__(self):
         return f"Chat between {self.seller.email} and {self.buyer.email}"
@@ -18,10 +18,10 @@ class Chat(models.Model):
 class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = models.TextField(blank=True, null=True)  # Matn ixtiyoriy bo‘ladi, chunki rasm yuborish ham mumkin
-    product = models.ForeignKey( Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='message_mentions')  # Xabar qaysi mahsulot haqida ekanligi (ixtiyoriy)
-    voice = models.FileField(upload_to='chat_voices/', null=True, blank=True)   # Ovozni yuborish uchun maydon
-    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')  # Javob xabari
+    content = models.TextField(blank=True, null=True)
+    product = models.ForeignKey( Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='message_mentions')
+    voice = models.FileField(upload_to='chat_voices/', null=True, blank=True)
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_read = models.BooleanField(default=False)
@@ -45,7 +45,7 @@ class Reaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('message', 'user')  # Har bir foydalanuvchi xabarga faqat bitta reaktsiya qo‘ya oladi
+        unique_together = ('message', 'user')
 
     def __str__(self):
         return f"{self.user.email} reacted {self.reaction} to {self.message}"

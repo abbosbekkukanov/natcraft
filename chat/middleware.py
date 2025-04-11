@@ -2,6 +2,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
+import logging
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -25,7 +27,9 @@ class TokenAuthMiddleware:
             if param.startswith('token='):
                 token = param.split('=')[1]
                 break
-        
+
+        logger.info(f"Token extracted: {token}")
         scope['user'] = await get_user_from_token(token) if token else AnonymousUser()
+        logger.info(f"User authenticated: {scope['user']}")
         return await self.inner(scope, receive, send)
     

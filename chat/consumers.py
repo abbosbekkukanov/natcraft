@@ -47,6 +47,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Foydalanuvchi chat ishtirokchisi ekanligini tekshirish
         if await self.is_chat_participant():
+            logger.info(f"Chat ishtirokchisi tasdiqlandi: user={self.scope['user']}, chat_id={self.chat_id}")
             await self.channel_layer.group_add(
                 self.chat_group_name,
                 self.channel_name
