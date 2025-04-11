@@ -109,9 +109,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         content = data.get('content')
         product_id = data.get('product')
         if not content:
+            logger.warning(f"Xabar yuborishda content yo'q: user={self.scope['user'].email}")
             await self.send_error("Xabar matni talab qilinadi")
             return
-
+        
+        logger.info(f"Xabar yuborilmoqda: user={self.scope['user'].email}, chat_id={chat.id}, content='{content[:30]}...'")
         chat = await database_sync_to_async(get_object_or_404)(Chat, id=self.chat_id)
         message_data = {'content': content}
         if product_id:
@@ -120,17 +122,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer = MessageSerializer(data=message_data, context={'chat': chat, 'sender': self.scope['user']})
         if await database_sync_to_async(serializer.is_valid)():
             message = await database_sync_to_async(serializer.save)()
+            # O‘ZGARISH: .data ni async tarzda olish
+            message_data_serialized = await database_sync_to_async(
+                lambda: MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
+            )()
+
+            logger.info(f"Xabar muvaffaqiyatli saqlandi: message_id={message.id}, chat_id={chat.id}, user={self.scope['user'].email}")
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {
                     'type': 'chat_message',
                     'action': 'new',
-                    'message': MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
+                    'message': message_data_serialized
                 }
             )
         else:
-            await self.send_error("Xabar yuborishda xato: " + str(serializer.errors))
-
+            errors = await database_sync_to_async(lambda: serializer.errors)()
+            logger.error(f"Xabarni saqlashda xatolik: user={self.scope['user'].email}, errors={errors}")
+            await self.send_error("Xabar yuborishda xato: " + str(errors))
+            
     async def sync_message(self, data):
         message_id = data.get('message_id')
         if not message_id:
@@ -165,12 +175,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message.is_edited = True
         await database_sync_to_async(message.save)()
         chat = await database_sync_to_async(get_object_or_404)(Chat, id=self.chat_id)
+        message_data_serialized = await database_sync_to_async(
+            lambda: MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
+        )()
         await self.channel_layer.group_send(
             self.chat_group_name,
             {
                 'type': 'chat_message',
                 'action': 'edit',
-                'message': MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
+                'message': message_data_serialized
             }
         )
 
