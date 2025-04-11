@@ -3,7 +3,7 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Chat, Message, Reaction
-from .serializers import MessageSerializer, ReactionSerializer
+from .serializers import MessageSerializer, ReactionSerializer, MinimalMessageSerializer
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from products.models import Product
@@ -89,6 +89,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def send_message(self, data):
         content = data.get('content')
         product_id = data.get('product')
+        reply_to_id = data.get('reply_to')
         if not content:
             await self.send_error("Xabar matni talab qilinadi")
             return
@@ -97,6 +98,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message_data = {'content': content}
         if product_id:
             message_data['product'] = product_id
+        if reply_to_id:
+            message_data['reply_to'] = reply_to_id
 
         serializer = MessageSerializer(data=message_data, context={'chat': chat, 'sender': self.scope['user']})
         if await database_sync_to_async(serializer.is_valid)():
@@ -173,7 +176,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message.is_edited = True
         await database_sync_to_async(message.save)()
         serialized_message = await database_sync_to_async(
-            lambda: MessageSerializer(message, context={'chat': message.chat}).data
+            lambda: MinimalMessageSerializer(message, context={'chat': message.chat}).data
         )()
         logger.info(f"Xabar tahrirlandi: chat_id={self.chat_id}, message_id={message.id}")
         await self.channel_layer.group_send(

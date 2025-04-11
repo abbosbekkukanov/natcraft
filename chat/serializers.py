@@ -34,6 +34,15 @@ class ReactionSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("Reaction field cannot be empty.")
         return value
+    
+class MinimalMessageSerializer(serializers.ModelSerializer):
+    sender = UserSerializer(read_only=True)
+    reply_to = serializers.PrimaryKeyRelatedField(queryset=Message.objects.all(), required=False)
+
+    class Meta:
+        model = Message
+        fields = ['id', 'chat', 'sender', 'content', 'reply_to', 'is_edited', 'created_at']
+        read_only_fields = ['chat', 'sender', 'created_at', 'is_edited']
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
