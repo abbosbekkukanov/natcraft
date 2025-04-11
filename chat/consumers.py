@@ -161,48 +161,62 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_error(f"Javob yuborishda xato: {await database_sync_to_async(lambda: serializer.errors)()}")
 
     async def edit_message(self, data):
-        message_id = data.get('message_id')
-        content = data.get('content')
-        if not message_id or not content:
-            await self.send_error("message_id va content talab qilinadi")
-            return
+        try:
+            message_id = data.get('message_id')
+            content = data.get('content')
+            if not message_id or not content:
+                await self.send_error("message_id va content talab qilinadi")
+                return
 
-        message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
-        sender = await database_sync_to_async(lambda: message.sender)()
-        if message.sender != self.scope['user']:
-            await self.send_error("Faqat o‘zingizning xabaringizni tahrirlashingiz mumkin")
-            return
+            # Message obyekti va sender bir qadamda async olinadi
+            message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
+            sender_id = await database_sync_to_async(lambda: message.sender.id)()
+            if sender_id != self.scope['user'].id:
+                await self.send_error("Faqat o‘zingizning xabaringizni tahrirlashingiz mumkin")
+                return
 
-        message.content = content
-        message.is_edited = True
-        await database_sync_to_async(message.save)()
-        serialized_message = await database_sync_to_async(
-            lambda: MinimalMessageSerializer(message, context={'chat': message.chat}).data
-        )()
-        logger.info(f"Xabar tahrirlandi: chat_id={self.chat_id}, message_id={message.id}")
-        await self.channel_layer.group_send(
-            self.chat_group_name,
-            {'type': 'chat_message', 'action': 'edit', 'message': serialized_message}
-        )
+            # Save operatsiyasi to‘liq async
+            await database_sync_to_async(lambda: message.__setattr__('content', content))()
+            await database_sync_to_async(lambda: message.__setattr__('is_edited', True))()
+            await database_sync_to_async(message.save)()
+
+            # Serializer ham async
+            serialized_message = await database_sync_to_async(
+                lambda: MinimalMessageSerializer(message, context={'chat': message.chat}).data
+            )()
+            logger.info(f"Xabar tahrirlandi: chat_id={self.chat_id}, message_id={message.id}")
+            await self.channel_layer.group_send(
+                self.chat_group_name,
+                {'type': 'chat_message', 'action': 'edit', 'message': serialized_message}
+            )
+        except Exception as e:
+            logger.error(f"edit_message xatosi: chat_id={self.chat_id}, error={str(e)}, traceback={str(e.__traceback__)}")
+            await self.send_error(f"Xato: {str(e)}")
 
     async def delete_message(self, data):
-        message_id = data.get('message_id')
-        if not message_id:
-            await self.send_error("message_id talab qilinadi")
-            return
+        try:
+            message_id = data.get('message_id')
+            if not message_id:
+                await self.send_error("message_id talab qilinadi")
+                return
 
-        message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
-        sender = await database_sync_to_async(lambda: message.sender)()
-        if message.sender != self.scope['user']:
-            await self.send_error("Faqat o‘zingizning xabaringizni o‘chirishingiz mumkin")
-            return
+            # Message obyekti va sender bir qadamda async olinadi
+            message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
+            sender_id = await database_sync_to_async(lambda: message.sender.id)()
+            if sender_id != self.scope['user'].id:
+                await self.send_error("Faqat o‘zingizning xabaringizni o‘chirishingiz mumkin")
+                return
 
-        await database_sync_to_async(message.delete)()
-        logger.info(f"Xabar o‘chirildi: chat_id={self.chat_id}, message_id={message_id}")
-        await self.channel_layer.group_send(
-            self.chat_group_name,
-            {'type': 'chat_message', 'action': 'delete', 'message_id': message_id}
-        )
+            # Delete operatsiyasi to‘liq async
+            await database_sync_to_async(message.delete)()
+            logger.info(f"Xabar o‘chirildi: chat_id={self.chat_id}, message_id={message_id}")
+            await self.channel_layer.group_send(
+                self.chat_group_name,
+                {'type': 'chat_message', 'action': 'delete', 'message_id': message_id}
+            )
+        except Exception as e:
+            logger.error(f"delete_message xatosi: chat_id={self.chat_id}, error={str(e)}, traceback={str(e.__traceback__)}")
+            await self.send_error(f"Xato: {str(e)}")
 
     async def add_reaction(self, data):
         message_id = data.get('message_id')
