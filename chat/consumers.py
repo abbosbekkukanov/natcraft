@@ -113,7 +113,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         chat = await database_sync_to_async(get_object_or_404)(Chat, id=self.chat_id)
-        message_data = {'chat': chat.id, 'sender': self.scope['user'].id, 'content': content}
+        message_data = {'content': content}
         if product_id:
             message_data['product'] = product_id
 
@@ -125,11 +125,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'chat_message',
                     'action': 'new',
-                    'message': MessageSerializer(message, context={'chat': chat}).data
+                    'message': MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
                 }
             )
         else:
-            await self.send_error("Xabar yuborishda xato: noto‘g‘ri ma’lumotlar")
+            await self.send_error("Xabar yuborishda xato: " + str(serializer.errors))
 
     async def sync_message(self, data):
         message_id = data.get('message_id')

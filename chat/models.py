@@ -16,7 +16,7 @@ class Chat(models.Model):
         return f"Chat between {self.seller.email} and {self.buyer.email}"
 
 class Message(models.Model):
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, null=False, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField(blank=True, null=True)
     product = models.ForeignKey( Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='message_mentions')

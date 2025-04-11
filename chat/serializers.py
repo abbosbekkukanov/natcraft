@@ -84,11 +84,12 @@ class MessageSerializer(serializers.ModelSerializer):
                 MessageImage.objects.create(message=message, image=image_data)
             return message
         # WebSocket uchun
-        elif self.context.get('sender'):
+        elif self.context.get('sender') and self.context.get('chat'):
             validated_data['sender'] = self.context['sender']
+            validated_data['chat'] = self.context['chat']  # O‘ZGARISH: chat qo‘shildi
             message = Message.objects.create(**validated_data)
             return message
-        raise serializers.ValidationError("Foydalanuvchi aniqlanmadi")
+        raise serializers.ValidationError("Foydalanuvchi yoki chat aniqlanmadi")
 
     def update(self, instance, validated_data):
         images_data = self.context.get('request', {}).FILES.getlist('images') if self.context.get('request') else []
