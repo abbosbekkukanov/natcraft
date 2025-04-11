@@ -16,6 +16,16 @@ class ChatViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return Chat.objects.filter(models.Q(seller=user) | models.Q(buyer=user))
 
+    @action(detail=True, methods=['post'], url_path='send-message')
+    def send_message(self, request, pk=None):
+        chat = self.get_object()
+        serializer = MessageSerializer(data=request.data, context={'request': request, 'chat': chat})
+        if serializer.is_valid():
+            serializer.save(chat=chat)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
     # def create(self, request, *args, **kwargs):
     #     product_id = request.data.get('product')
 
@@ -48,14 +58,6 @@ class ChatViewSet(viewsets.ModelViewSet):
     #     serializer = MessageSerializer(messages, many=True)
     #     return Response(serializer.data)
 
-    # @action(detail=True, methods=['post'], url_path='send-message')
-    # def send_message(self, request, pk=None):
-    #     chat = self.get_object()
-    #     serializer = MessageSerializer(data=request.data, context={'request': request, 'chat': chat})
-    #     if serializer.is_valid():
-    #         serializer.save(chat=chat)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # @action(detail=True, methods=['post'], url_path='messages/(?P<message_id>\d+)/react')
     # def add_reaction(self, request, pk=None, message_id=None):

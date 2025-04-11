@@ -37,25 +37,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.chat_id = self.scope['url_route']['kwargs']['chat_id']
         self.chat_group_name = f'chat_{self.chat_id}'
-        logger.info(f"Ulanish: chat_id={self.chat_id}, user={self.scope['user']}")
+        logger.info(f"WebSocket ulanish boshlandi: chat_id={self.chat_id}, user={self.scope['user'].email if not self.scope['user'].is_anonymous else 'anonymous'}")
 
         # Foydalanuvchi autentifikatsiya qilinganligini tekshirish
         if self.scope['user'].is_anonymous:
-            logger.error("Anonim foydalanuvchi ulanishga urindi")
+            logger.error(f"Anonim foydalanuvchi ulanishga urindi: chat_id={self.chat_id}")
             await self.close(code=4001)
             return
 
         # Foydalanuvchi chat ishtirokchisi ekanligini tekshirish
         if await self.is_chat_participant():
-            logger.info(f"Chat ishtirokchisi tasdiqlandi: user={self.scope['user']}, chat_id={self.chat_id}")
+            logger.info(f"Chat ishtirokchisi tasdiqlandi: user={self.scope['user'].email}, chat_id={self.chat_id}")
             await self.channel_layer.group_add(
                 self.chat_group_name,
                 self.channel_name
             )
             await self.accept()
-            logger.info(f"Ulanish muvaffaqiyatli: chat_id={self.chat_id}")
+            logger.info(f"Ulanish muvaffaqiyatli: chat_id={self.chat_id}, channel_name={self.channel_name}")
         else:
-            logger.error(f"Foydalanuvchi {self.scope['user']} chat {self.chat_id} da ishtirokchi emas")
+            logger.error(f"Foydalanuvchi chat ishtirokchisi emas: user={self.scope['user'].email}, chat_id={self.chat_id}")
             await self.close(code=4003) 
 
     async def disconnect(self, close_code):
@@ -68,8 +68,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
             action = data.get('action')
-            logger.info(f"Action: {action}")
+            logger.info(f"Xabar qabul qilindi: chat_id={self.chat_id}, action={action}, data={data}")
             if not action:
+                logger.error(f"Action yetishmayapti: chat_id={self.chat_id}")
                 await self.send_error("Action talab qilinadi")
                 return
 
@@ -80,15 +81,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'delete_message': self.delete_message,
                 'add_reaction': self.add_reaction,
                 'remove_reaction': self.remove_reaction,
+                'sync_message': self.sync_message,
             }
 
             handler = handlers.get(action)
             if handler:
                 await handler(data)
             else:
+                logger.error(f"Noto‘g‘ri action: chat_id={self.chat_id}, action={action}")
                 await self.send_error("Noto‘g‘ri action")
         except json.JSONDecodeError as e:
-            logger.error(f"JSON xatosi: {str(e)}")
+            logger.error(f"JSON xatosi: chat_id={self.chat_id}, error={str(e)}, text_data={text_data}")
             await self.send_error("Xato JSON formati")
 
     # Yordamchi metodlar
@@ -114,7 +117,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if product_id:
             message_data['product'] = product_id
 
-        serializer = MessageSerializer(data=message_data)
+        serializer = MessageSerializer(data=message_data, context={'chat': chat})
         if await database_sync_to_async(serializer.is_valid)():
             message = await database_sync_to_async(serializer.save)()
             await self.channel_layer.group_send(
@@ -122,11 +125,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'chat_message',
                     'action': 'new',
-                    'message': MessageSerializer(message).data
+                    'message': MessageSerializer(message, context={'chat': chat}).data
                 }
             )
         else:
-            await self.send_error(serializer.errors)
+            await self.send_error("Xabar yuborishda xato: noto‘g‘ri ma’lumotlar")
+
+    async def sync_message(self, data):
+        message_id = data.get('message_id')
+        if not message_id:
+            await self.send_error("message_id talab qilinadi")
+            return
+
+        message = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
+        chat = await database_sync_to_async(get_object_or_404)(Chat, id=self.chat_id)
+        await self.channel_layer.group_send(
+            self.chat_group_name,
+            {
+                'type': 'chat_message',
+                'action': 'new',
+                'message': MessageSerializer(message, context={'chat': chat}).data
+            }
+        )
+        logger.info(f"Xabar sinxronlashtirildi: chat_id={self.chat_id}, message_id={message.id}")
 
     async def edit_message(self, data):
         message_id = data.get('message_id')

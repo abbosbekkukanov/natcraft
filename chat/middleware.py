@@ -27,9 +27,11 @@ class TokenAuthMiddleware:
             if param.startswith('token='):
                 token = param.split('=')[1]
                 break
-
-        logger.info(f"Token extracted: {token}")
+        
+        logger.info(f"WebSocket ulanish: query_string={query_string}, token={token}")
         scope['user'] = await get_user_from_token(token) if token else AnonymousUser()
-        logger.info(f"User authenticated: {scope['user']}")
+        if scope['user'].is_anonymous:
+            logger.error(f"Autentifikatsiya muvaffaqiyatsiz: token={token}")
+        else:
+            logger.info(f"Foydalanuvchi autentifikatsiya qilindi: user={scope['user'].email}, id={scope['user'].id}")
         return await self.inner(scope, receive, send)
-    
