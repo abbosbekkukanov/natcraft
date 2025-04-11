@@ -63,6 +63,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'add_reaction': self.add_reaction,
                 'remove_reaction': self.remove_reaction,
                 'sync_message': self.sync_message,
+                'reply_message': self.reply_message,
             }
 
             handler = handlers.get(action)
@@ -126,6 +127,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.chat_group_name,
             {'type': 'chat_message', 'action': 'new', 'message': serialized_message}
         )
+
+    async def reply_message(self, data):
+        message_id = data.get('message_id')
+        content = data.get('content')
+        if not message_id or not content:
+            await self.send_error("message_id va content talab qilinadi")
+            return
+
+        chat = await database_sync_to_async(get_object_or_404)(Chat, id=self.chat_id)
+        reply_to = await database_sync_to_async(get_object_or_404)(Message, id=message_id, chat_id=self.chat_id)
+        message_data = {'content': content, 'reply_to': message_id}
+
+        serializer = MessageSerializer(data=message_data, context={'chat': chat, 'sender': self.scope['user']})
+        if await database_sync_to_async(serializer.is_valid)():
+            message = await database_sync_to_async(serializer.save)()
+            serialized_message = await database_sync_to_async(
+                lambda: MessageSerializer(message, context={'chat': chat, 'sender': self.scope['user']}).data
+            )()
+            logger.info(f"Javob xabari saqlandi: chat_id={self.chat_id}, message_id={message.id}, reply_to={message_id}")
+            await self.channel_layer.group_send(
+                self.chat_group_name,
+                {
+                    'type': 'chat_message',
+                    'action': 'reply',
+                    'message': serialized_message
+                }
+            )
+        else:
+            await self.send_error(f"Javob yuborishda xato: {await database_sync_to_async(lambda: serializer.errors)()}")
 
     async def edit_message(self, data):
         message_id = data.get('message_id')

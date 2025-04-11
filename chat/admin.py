@@ -23,6 +23,7 @@ class ReactionInline(admin.TabularInline):
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', 'chat', 'sender', 'short_content', 'is_read', 'created_at')
+    list_display_links = ('id', 'chat', 'short_content')
     search_fields = ('sender__email', 'chat__product__name', 'content')
     list_filter = ('is_read', 'created_at')
     readonly_fields = ('created_at', 'updated_at')
