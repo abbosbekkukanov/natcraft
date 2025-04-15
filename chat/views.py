@@ -7,6 +7,9 @@ from products.models import Product
 from django.shortcuts import get_object_or_404
 from django.db import models
 from .permissions import IsChatParticipant
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
@@ -18,12 +21,18 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='send-message')
     def send_message(self, request, pk=None):
-        chat = self.get_object()
-        serializer = MessageSerializer(data=request.data, context={'request': request, 'chat': chat})
-        if serializer.is_valid():
-            serializer.save(chat=chat)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            chat = self.get_object()
+            serializer = MessageSerializer(data=request.data, context={'request': request, 'chat': chat})
+            if serializer.is_valid():
+                serializer.save(chat=chat)
+                logger.info(f"Xabar yuborildi: chat_id={chat.id}, sender_id={request.user.id}")
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            logger.error(f"Xabar yuborishda xato: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Xabar yuborishda ichki xato: {str(e)}, traceback={str(e.__traceback__)}")
+            return Response({"error": "Server ichki xatosi"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
     # def create(self, request, *args, **kwargs):

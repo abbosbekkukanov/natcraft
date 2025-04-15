@@ -126,13 +126,22 @@ class ChatSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         product = validated_data.get('product', None)
         
-        if product:
-            seller = product.user
-        else:
+        if not product:
             raise serializers.ValidationError("Chat boshlash uchun mahsulot ID’si talab qilinadi")
 
-        return Chat.objects.create(
-            product=product,
+        seller = product.user
+        buyer = request.user
+
+        if seller == buyer:
+            raise serializers.ValidationError("O‘zingiz bilan chat boshlay olmaysiz")
+
+        chat, created = Chat.objects.get_or_create(
             seller=seller,
-            buyer=request.user,
+            buyer=buyer,
+            defaults={'product': product}
         )
+
+        if not created and product != chat.product:
+            chat.product = product
+            chat.save()
+        return chat
