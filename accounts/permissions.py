@@ -7,9 +7,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Faqat o'qish ruxsati
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Yozish ruxsati faqat user uchun
         return obj.user == request.user

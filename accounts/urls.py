@@ -10,7 +10,8 @@ from .views import (
     LogoutView ,
     UserProfileViewSet,
     CraftsmenListView,
-    GetUserProfileView
+    GetUserProfileView,
+    ProfessionListView
 )
 
 router = DefaultRouter()
@@ -30,6 +31,7 @@ urlpatterns = [
     path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('profile/me/', GetUserProfileView.as_view(), name='get_user_profile'),
+    path('professions/', ProfessionListView.as_view(), name='profession-list'),
     path('', include(router.urls)),
     path('craftsmen/', CraftsmenListView.as_view(), name='craftsmen-list'),
 ]
