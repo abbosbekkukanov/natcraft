@@ -73,11 +73,18 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
         product = self.get_object()
-        favorite, created = Favorite.objects.get_or_create(user=request.user, product=product)
-        if not created:
-            favorite.delete()
-            return Response({'status': 'unliked'})
-        return Response({'status': 'liked'})
+        if request.method == 'POST':
+                    favorite, created = Favorite.objects.get_or_create(user=request.user, product=product)
+                    if not created:
+                        favorite.delete()  # Agar allaqachon yoqdirilgan bo'lsa, olib tashlash
+                        return Response({'status': 'unliked'})
+                    return Response({'status': 'liked'})
+        elif request.method == 'DELETE':
+            favorite = Favorite.objects.filter(user=request.user, product=product)
+            if favorite.exists():
+                favorite.delete()
+                return Response({'status': 'unliked'})
+            return Response({'status': 'not liked'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def add_to_cart(self, request, pk=None):
