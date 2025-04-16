@@ -70,16 +70,16 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Bu kategoriyada mahsulot topilmadi"}, status=status.HTTP_404_NOT_FOUND)
 
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
         product = self.get_object()
         favorite, created = Favorite.objects.get_or_create(user=request.user, product=product)
         if not created:
-            favorite.delete()  # Agar allaqachon yoqdirilgan bo'lsa, yoqdirishni olib tashlash
+            favorite.delete()
             return Response({'status': 'unliked'})
         return Response({'status': 'liked'})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def add_to_cart(self, request, pk=None):
         product = self.get_object()
         cart_item, created = CartItem.objects.get_or_create(user=request.user, product=product)
@@ -87,8 +87,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             cart_item.quantity += 1  # Agar allaqachon savatchada bo'lsa, miqdorini oshirish
             cart_item.save()
         return Response({'status': 'added to cart', 'quantity': cart_item.quantity})
-    
-    # 19.11.2024
+        
     
     @action(detail=True, methods=['get'], url_path='view')
     def record_view(self, request, pk=None):

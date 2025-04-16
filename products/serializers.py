@@ -21,11 +21,19 @@ class ProductSerializer(serializers.ModelSerializer):
         child=serializers.ImageField(), write_only=True, required=False
     )
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    like_count = serializers.IntegerField(source='favorited_by.count', read_only=True)
 
     class Meta:
         model = Product
         fields = "__all__"
         read_only_fields = ['user', 'created_at', 'updated_at']
+
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Favorite.objects.filter(user=request.user, product=obj).exists()
+        return False
 
     def create(self, validated_data):
         images_data = validated_data.pop('images', None)
@@ -37,10 +45,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Favorite
-        fields = "__all__"
-        
+        fields = ['id', 'user', 'product', 'created_at']
+        read_only_fields = ['user', 'product', 'created_at']
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
