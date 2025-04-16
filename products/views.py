@@ -70,7 +70,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Bu kategoriyada mahsulot topilmadi"}, status=status.HTTP_404_NOT_FOUND)
 
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
         product = self.get_object()
         if request.method == 'POST':
