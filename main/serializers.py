@@ -1,4 +1,8 @@
 from rest_framework import serializers
+from accounts.models import UserProfile, Profession
+from accounts.serializers import ProfessionSerializer
+from products.models import Product
+from products.serializers import ProductSerializer
 from .models import Banner, Craftsmanship, Craftsmanshiplist, OurTeam, SocialMediaLink, AboutUs, FeatureItem, CraftsmanshipFeature
 
 class BannerSerializer(serializers.ModelSerializer):
@@ -51,3 +55,37 @@ class SocialMediaLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialMediaLink
         fields = '__all__'
+
+
+class CraftsmanSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='user.first_name')
+    experience = serializers.IntegerField()  # Tajriba yillari
+    mentees = serializers.IntegerField()  # Shogirdlar soni
+    award = serializers.CharField(allow_null=True)  # Sovrinlar
+    profession = ProfessionSerializer()  # Hunarmandning kasbi
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'first_name', 'experience', 'mentees', 'award', 'profession']
+
+class CraftsmenStatsSerializer(serializers.Serializer):
+    total_craftsmen = serializers.IntegerField()
+    craftsmen_by_profession = serializers.DictField(child=serializers.IntegerField())
+    total_workshops = serializers.IntegerField()
+    total_professions = serializers.IntegerField()
+    craftsmen = CraftsmanSerializer(many=True) 
+
+class CraftmanDetailSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='user.first_name')
+    email = serializers.CharField(source='user.email')
+    profession = ProfessionSerializer()
+    products = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'first_name', 'email', 'bio', 'profile_image', 'address', 'latitude', 'longitude',
+                  'phone_number', 'experience', 'mentees', 'award', 'profession', 'products']
+
+    def get_products(self, obj):
+        products = Product.objects.filter(user=obj.user)
+        return ProductSerializer(products, many=True, context=self.context).data
