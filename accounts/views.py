@@ -101,7 +101,7 @@ class LogoutView(APIView):
 class ProfessionListView(generics.ListAPIView):
     queryset = Profession.objects.all()
     serializer_class = ProfessionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthorOrReadOnly]
 
 
 # class UserProfile 
