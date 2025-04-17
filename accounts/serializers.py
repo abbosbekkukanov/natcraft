@@ -6,6 +6,9 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import EmailConfirmation, PasswordResetCode, UserProfile, Profession
 import random
 import string
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -183,7 +186,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 class ProfessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profession
-        fields = '__all__'
+        fields = ['id', 'name']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -204,8 +207,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             user.first_name = user_data['first_name']
             user.save()
         
-        return UserProfile.objects.create(user=self.context['request'].user, **validated_data)
-    
+        logger.info(f"Creating UserProfile with data: {validated_data}")
+        profile = UserProfile.objects.create(user=self.context['request'].user, **validated_data)
+        logger.info(f"Created UserProfile: {profile.id}, profession: {profile.profession_id}")
+        return profile
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', None)
@@ -213,14 +218,27 @@ class UserProfileSerializer(serializers.ModelSerializer):
             instance.user.first_name = user_data['first_name']
             instance.user.save()
 
+        logger.info(f"Updating UserProfile with data: {validated_data}")
         for attr, value in validated_data.items():
             setattr(instance, attr, value if value != "" else None)
         instance.save()
+        logger.info(f"Updated UserProfile: {instance.id}, profession: {instance.profession_id}")
         return instance
-
 
     def validate_phone_number(self, value):
         if not value:
             raise serializers.ValidationError("Phone number is required!")
         return value
+
+    def validate_profession(self, value):
+        if not value:
+            raise serializers.ValidationError("Profession is required!")
+        logger.info(f"Validating profession: {value.id}")
+        return value
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # profession maydonini faqat id sifatida qaytarish
+        representation['profession'] = instance.profession_id
+        return representation
     

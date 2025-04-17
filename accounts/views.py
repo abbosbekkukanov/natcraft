@@ -17,6 +17,9 @@ from .serializers import (
 )
 from .permissions import IsAuthorOrReadOnly
 from django.contrib.auth import get_user_model
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -132,15 +135,18 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthorOrReadOnly]
 
     def perform_create(self, serializer):
+        logger.info(f"Creating profile for user: {self.request.user}")
         serializer.save(user=self.request.user)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         
         if instance.user != request.user:
+            logger.warning(f"User {request.user} attempted to update profile of {instance.user}")
             return Response({"detail": "You can only change your own profile."}, status=status.HTTP_403_FORBIDDEN)
         data = request.data
         
+        logger.info(f"Updating profile {instance.id} with data: {data}")
         if "user_first_name" in data:
             instance.user.first_name = data["user_first_name"]
             instance.user.save()
@@ -150,6 +156,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.user != request.user:
+            logger.warning(f"User {request.user} attempted to delete profile of {instance.user}")
             return Response({"detail": "You can only delete your own profile."}, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
     
