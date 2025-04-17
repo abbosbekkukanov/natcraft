@@ -218,6 +218,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
             instance.user.first_name = user_data['first_name']
             instance.user.save()
 
+        profession_id = self.context['request'].data.get('profession')
+        if profession_id:
+            try:
+                profession = Profession.objects.get(id=profession_id)
+                validated_data['profession'] = profession
+                logger.info(f"Profession set to: {profession.id} ({profession.name})")
+            except Profession.DoesNotExist:
+                logger.error(f"Profession with id {profession_id} not found")
+                raise serializers.ValidationError({"profession": f"Profession with id {profession_id} not found"})
+
         logger.info(f"Updating UserProfile with data: {validated_data}")
         for attr, value in validated_data.items():
             setattr(instance, attr, value if value != "" else None)
@@ -233,12 +243,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def validate_profession(self, value):
         if not value:
             raise serializers.ValidationError("Profession is required!")
-        logger.info(f"Validating profession: {value.id}")
+        logger.info(f"Validating profession: {value.id} ({value.name})")
         return value
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # profession maydonini faqat id sifatida qaytarish
         representation['profession'] = instance.profession_id
         return representation
     
