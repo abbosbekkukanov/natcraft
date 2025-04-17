@@ -198,13 +198,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        # Profession ma'lumotlarini olish
-        profession_data = validated_data.pop('profession')
-        # Yangi profession yaratish
-        profession = Profession.objects.create(**profession_data)
-        # UserProfile yaratish va professionni ulash
-        user_profile = UserProfile.objects.create(profession=profession, **validated_data)
-        return user_profile
+        user_data = validated_data.pop('user', None)
+        if user_data and 'first_name' in user_data:
+            user = self.context['request'].user
+            user.first_name = user_data['first_name']
+            user.save()
+        
+        return UserProfile.objects.create(user=self.context['request'].user, **validated_data)
     
 
     def update(self, instance, validated_data):
@@ -213,21 +213,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             instance.user.first_name = user_data['first_name']
             instance.user.save()
 
-        profession_data = validated_data.pop('profession', None)
-        if profession_data:
-            profession, _ = Profession.objects.get_or_create(**profession_data)
-            instance.profession = profession
-
         for attr, value in validated_data.items():
             setattr(instance, attr, value if value != "" else None)
         instance.save()
         return instance
 
-
-    def validate_profession(self, value):
-        if not value:
-            raise serializers.ValidationError("Occupation field is mandatory!")
-        return value
 
     def validate_phone_number(self, value):
         if not value:
