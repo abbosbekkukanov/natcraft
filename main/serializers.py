@@ -59,6 +59,7 @@ class SocialMediaLinkSerializer(serializers.ModelSerializer):
 
 class CraftsmanSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name')
+    address = serializers.CharField() 
     experience = serializers.IntegerField()  # Tajriba yillari
     mentees = serializers.IntegerField()  # Shogirdlar soni
     award = serializers.CharField(allow_null=True)  # Sovrinlar
@@ -66,7 +67,7 @@ class CraftsmanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'first_name', 'experience', 'mentees', 'award', 'profession']
+        fields = ['id', 'first_name', 'address', 'experience', 'mentees', 'award', 'profession']
 
 class CraftsmenStatsSerializer(serializers.Serializer):
     total_craftsmen = serializers.IntegerField()
