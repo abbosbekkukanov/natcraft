@@ -55,11 +55,15 @@ class CraftsmenStatsView(views.APIView):
 
     def get(self, request):
         address = request.query_params.get('address', None)
+        profession = request.query_params.get('profession', None)
 
         craftsmen = UserProfile.objects.filter(user__is_verified=True).select_related('user', 'profession')
 
         if address:
             craftsmen = craftsmen.filter(address__icontains=address)
+
+        if profession:
+            craftsmen = craftsmen.filter(profession__name__iexact=profession)
 
         total_craftsmen = craftsmen.count()
 
@@ -69,16 +73,22 @@ class CraftsmenStatsView(views.APIView):
         )
         if address:
             craftsmen_by_profession = craftsmen_by_profession.filter(profession__address__icontains=address)
+        if profession:
+            craftsmen_by_profession = craftsmen_by_profession.filter(name__iexact=profession)
         craftsmen_by_profession_dict = {item['name']: item['count'] for item in craftsmen_by_profession.values('name', 'count')}
 
         workshops = Workshop.objects.filter(user__is_verified=True)
         if address:
             workshops = workshops.filter(user__profile__address__icontains=address)
+        if profession:
+            workshops = workshops.filter(user__profile__profession__name__iexact=profession)
         total_workshops = workshops.count()
 
         professions = Profession.objects.filter(profession__user__is_verified=True).distinct()
         if address:
             professions = professions.filter(profession__address__icontains=address)
+        if profession:
+            professions = professions.filter(name__iexact=profession)
         total_professions = professions.count()
 
         data = {
