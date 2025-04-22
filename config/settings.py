@@ -16,6 +16,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 INSTALLED_APPS = [
+    'modeltranslation',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -23,11 +24,11 @@ INSTALLED_APPS = [
     # 'django_filters',
     'products',
     'accounts',
-    'main',
     'workshop',
     'chat',
     'notifications',
     'corsheaders',
+    'main.apps.MainConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -148,7 +149,7 @@ AUTH_PASSWORD_VALIDATORS = [
 from django.utils.translation import gettext_lazy as _
 
 LANGUAGES = [
-    ('qq', _('Qoraqalpoq')),
+    ('kaa', _('Qoraqalpoq')),
     ('uz', _('O\'zbekcha')),
     ('en', _('English')),
     ('ru', _('Русский')),
@@ -157,11 +158,38 @@ LANGUAGES = [
 
 LANGUAGE_CODE = 'uz'
 
+LOCALE_PATHS = [
+    BASE_DIR / 'main' / 'locale',
+]
+
 TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = True
 
 USE_TZ = True
+
+
+# Modeltranslation sozlamalari
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'uz'
+MODELTRANSLATION_LANGUAGES = ['uz', 'en', 'ru', 'kaa']
+
+from config.custom_lang import add_custom_languages
+add_custom_languages()
+
+# Maxsus til ma'lumotlari (kaa uchun)
+from django.utils.translation import get_language_info
+
+def custom_language_info():
+    # Django’ning ichki til ma'lumotlariga kaa ni qo‘shish
+    if not hasattr(get_language_info, 'cache'):
+        get_language_info.cache = {}
+    get_language_info.cache['kaa'] = {
+        'code': 'kaa',
+        'name': 'Qoraqalpoq',
+        'name_local': 'Qaraqalpaq',
+        'bidi': False,
+        'name_translated': str(_('Qoraqalpoq')),
+    }
 
 
 # Static files (CSS, JavaScript, Images)

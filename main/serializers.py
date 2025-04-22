@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from accounts.models import UserProfile, Profession
+from django.conf import settings
 from accounts.serializers import ProfessionSerializer
 from products.models import Product
 from products.serializers import ProductSerializer
@@ -90,3 +91,13 @@ class CraftmanDetailSerializer(serializers.ModelSerializer):
     def get_products(self, obj):
         products = Product.objects.filter(user=obj.user)
         return ProductSerializer(products, many=True, context=self.context).data
+    
+
+
+class LanguageSerializer(serializers.Serializer):
+    language = serializers.ChoiceField(choices=[(lang[0], lang[1]) for lang in settings.LANGUAGES])
+
+    def validate_language(self, value):
+        if value not in [lang[0] for lang in settings.LANGUAGES]:
+            raise serializers.ValidationError("Noto‘g‘ri til kodi.")
+        return value

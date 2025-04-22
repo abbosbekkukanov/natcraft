@@ -13,10 +13,12 @@ from .serializers import (
     OurTeamSerializer, 
     AboutUsSerializer, 
     CraftsmenStatsSerializer, 
-    CraftmanDetailSerializer
+    CraftmanDetailSerializer,
+    LanguageSerializer
 )
 from .permissions import IsReadOnly 
 from django.db.models import Count
+from django.utils.translation import activate
 # Create your views here.
 
 class BannerViewSet(viewsets.ModelViewSet):
@@ -120,3 +122,26 @@ class CategoryStatsView(views.APIView):
         categories = Category.objects.all()
         serializer = CategorySerializer(categories, many=True)
         return response.Response(serializer.data)
+    
+
+class SetLanguageView(views.APIView):
+    permission_classes = [IsReadOnly]  # Mavjud permission’ga moslashtirdim
+    def post(self, request):
+        serializer = LanguageSerializer(data=request.data)
+        if serializer.is_valid():
+            language = serializer.validated_data['language']
+            activate(language)
+            request.session['django_language'] = language
+            return response.Response({"message": f"Til {language} ga o‘zgartirildi"}, status=status.HTTP_200_OK)
+        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def get(self, request, lang_code):
+        serializer = LanguageSerializer(data={'language': lang_code})
+        if serializer.is_valid():
+            language = serializer.validated_data['language']
+            activate(language)
+            request.session['django_language'] = language
+            return response.Response({"message": f"Til {language} ga o‘zgartirildi"}, status=status.HTTP_200_OK)
+        return response.Response({"error": "Noto‘g‘ri til kodi"}, status=status.HTTP_400_BAD_REQUEST)
+    

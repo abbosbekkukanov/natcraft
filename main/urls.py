@@ -9,7 +9,8 @@ from .views import (
     AboutUsViewSet, 
     CraftsmenStatsView,
     CraftmanDetailView,
-    CategoryStatsView
+    CategoryStatsView,
+    SetLanguageView
 )
 router = DefaultRouter()
 router.register(r'banner', BannerViewSet)
@@ -25,4 +26,6 @@ urlpatterns = [
     path('craftsmens/', CraftsmenStatsView.as_view(), name='craftmens-stats'),
     path('craftsmens/<int:id>/', CraftmanDetailView.as_view(), name='craftman-detail'),
     path('category/', CategoryStatsView.as_view(), name='category-stats'),
+    path('set-language/', SetLanguageView.as_view(), name='set-language'),
+    path('set-language/<str:lang_code>/', SetLanguageView.as_view(), name='set-language-get'),
 ]
