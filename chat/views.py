@@ -16,6 +16,8 @@ class ChatViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsChatParticipant]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Chat.objects.none()
         user = self.request.user
         return Chat.objects.filter(models.Q(seller=user) | models.Q(buyer=user))
 

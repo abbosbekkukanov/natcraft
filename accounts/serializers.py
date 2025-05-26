@@ -198,6 +198,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = "__all__"
         read_only_fields = ['id', 'user_email', 'created_at', 'updated_at']
+        ref_name = 'AccountsUserProfile'
 
     def create(self, validated_data):
         user_data = validated_data.pop('user', None)

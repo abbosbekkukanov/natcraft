@@ -9,7 +9,8 @@ class UserNotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Faqat joriy foydalanuvchining bildirishnomalari
+        if getattr(self, 'swagger_fake_view', False):
+            return UserNotification.objects.none()
         return UserNotification.objects.filter(user=self.request.user)
 
     @action(detail=True, methods=['post'])

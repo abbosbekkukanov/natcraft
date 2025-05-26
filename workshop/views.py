@@ -5,7 +5,7 @@ from .models import Workshop, WorkshopImage360, WorkshopRating
 from .serializers import WorkshopSerializer, WorkshopImage360Serializer, WorkshopRatingSerializer
 from .permissions import IsOwnerOrReadOnly
 from rest_framework import serializers
-
+from drf_yasg.utils import swagger_auto_schema
 
 class WorkshopViewSet(viewsets.ModelViewSet):
     serializer_class = WorkshopSerializer
@@ -48,6 +48,8 @@ class WorkshopRatingViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return WorkshopRating.objects.none()
         return WorkshopRating.objects.filter(workshop__id=self.kwargs['workshop_pk'])
 
     def perform_create(self, serializer):

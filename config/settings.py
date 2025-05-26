@@ -9,7 +9,7 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['qqrnatcraft.uz', 'www.qqrnatcraft.uz', '127.0.0.1', '176.221.29.142']
+ALLOWED_HOSTS = ['qqrnatcraft.uz', 'www.qqrnatcraft.uz', '127.0.0.1']
 
 # Application definition 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -17,6 +17,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 INSTALLED_APPS = [
     'modeltranslation',
+    'drf_yasg',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',

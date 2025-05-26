@@ -9,6 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['profile_image', 'bio', 'phone_number', 'address']
+        ref_name = 'ChatUserProfile'
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True, required=False, allow_null=True)
