@@ -17,8 +17,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="support@natcraft.com"),
         license=openapi.License(name="BSD License"),
     ),
-    public=True,  # Hammaga ochiq bo‘lishi uchun
-    permission_classes=(permissions.AllowAny,),  # Autentifikatsiyasiz kirish uchun
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
